@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -76,6 +75,9 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -95,13 +97,13 @@ export default {
 				},
 				'pulse-subtle': {
 					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.8' }
+					'50%': { opacity: '0.6' }
 				},
 				'flicker': {
-					'0%, 100%': { opacity: '1' },
-					'25%': { opacity: '0.9' },
-					'50%': { opacity: '0.75' },
-					'75%': { opacity: '0.85' }
+					'0%, 100%': { opacity: '1', transform: 'scale(1.02)' },
+					'25%': { opacity: '0.9', transform: 'scale(1)' },
+					'50%': { opacity: '0.75', transform: 'scale(1.01)' },
+					'75%': { opacity: '0.85', transform: 'scale(0.99)' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
@@ -133,8 +135,14 @@ export default {
 					'100%': { opacity: '0', transform: 'translateY(100px) rotate(45deg)' }
 				},
 				'glow-pulse': {
-					'0%, 100%': { filter: 'drop-shadow(0 0 8px rgba(230, 194, 0, 0.5))' },
-					'50%': { filter: 'drop-shadow(0 0 15px rgba(230, 194, 0, 0.8))' }
+					'0%, 100%': { filter: 'drop-shadow(0 0 10px rgba(230, 194, 0, 0.5))' },
+					'50%': { filter: 'drop-shadow(0 0 20px rgba(230, 194, 0, 0.8))' }
+				},
+				'ping': {
+					'75%, 100%': {
+						transform: 'scale(2)',
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
@@ -149,7 +157,8 @@ export default {
 				'fade-out': 'fade-out 0.5s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
 				'petal-fall': 'petal-fall 3s ease-out forwards',
-				'glow-pulse': 'glow-pulse 4s ease-in-out infinite'
+				'glow-pulse': 'glow-pulse 4s ease-in-out infinite',
+				'ping': 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite'
 			}
 		}
 	},

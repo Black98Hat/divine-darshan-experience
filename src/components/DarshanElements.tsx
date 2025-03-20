@@ -1,7 +1,9 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Flower, Hand, Heart, IndianRupee, X } from 'lucide-react';
+import { Bell, Flower, Hand, Heart, X, Music, VolumeX } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
+// Styled petal component for flower offering
 interface PetalProps {
   style: React.CSSProperties;
 }
@@ -10,21 +12,34 @@ const Petal = ({ style }: PetalProps) => {
   return <div className="petal animate-petal-fall" style={style} />;
 };
 
-// Bell Interaction Component
+// Temple Bell Interaction Component
 export const BellInteraction = () => {
   const [isRinging, setIsRinging] = useState(false);
+  const [ringCount, setRingCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const ringBell = () => {
     if (isRinging) return;
     
     setIsRinging(true);
+    setRingCount(prev => prev + 1);
+    
     if (audioRef.current) {
+      audioRef.current.volume = 0.7;
       audioRef.current.currentTime = 0;
-      audioRef.current.play();
+      audioRef.current.play().catch(err => {
+        console.log("Bell audio prevented:", err);
+      });
     }
     
-    setTimeout(() => setIsRinging(false), 2000);
+    // Bell vibration effect
+    const body = document.querySelector('body');
+    if (body) body.classList.add('bell-ringing');
+    
+    setTimeout(() => {
+      setIsRinging(false);
+      if (body) body.classList.remove('bell-ringing');
+    }, 2000);
   };
   
   return (
@@ -32,16 +47,40 @@ export const BellInteraction = () => {
       <audio ref={audioRef} src="/assets/temple-bell.mp3" preload="auto" />
       <button 
         onClick={ringBell}
-        className={`interaction-button relative flex items-center justify-center p-3 rounded-full bg-temple-cream border border-temple-gold transition-all duration-300 ${isRinging ? 'animate-pulse' : ''}`}
+        className={cn(
+          "interaction-button relative flex items-center justify-center p-3 sm:p-4",
+          "rounded-full bg-temple-cream border-2 border-temple-gold",
+          "shadow-[0_0_15px_rgba(230,194,0,0.3)]",
+          "transition-all duration-300",
+          isRinging ? "animate-bell-ring" : ""
+        )}
         disabled={isRinging}
-        aria-label="Ring bell"
+        aria-label="Ring sacred bell"
       >
         <Bell 
           size={24} 
-          className={`text-temple-gold transition-all duration-300 ${isRinging ? 'animate-pulse' : ''}`} 
+          className={cn(
+            "text-temple-gold transition-all duration-300",
+            isRinging ? "animate-pulse" : ""
+          )} 
         />
+        
+        {/* Ripple effect on bell ring */}
+        {isRinging && (
+          <span className="absolute inset-0 rounded-full border-4 border-temple-gold animate-ripple"></span>
+        )}
       </button>
-      <span className="block text-xs mt-1 text-center font-medium text-temple-red opacity-80">Ring Bell</span>
+      
+      {/* Bell ring count - shows after several rings */}
+      {ringCount > 3 && (
+        <div className="absolute -top-2 -right-2 bg-temple-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          {ringCount}
+        </div>
+      )}
+      
+      <span className="block text-xs mt-2 text-center font-medium text-temple-red opacity-90">
+        Ring Bell
+      </span>
     </div>
   );
 };
@@ -49,18 +88,28 @@ export const BellInteraction = () => {
 // Flower Offering Component
 export const FlowerOffering = () => {
   const [petals, setPetals] = useState<React.CSSProperties[]>([]);
+  const [offeringCount, setOfferingCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const offerFlowers = () => {
+    setOfferingCount(prev => prev + 1);
+    
     if (audioRef.current) {
+      audioRef.current.volume = 0.5;
       audioRef.current.currentTime = 0;
-      audioRef.current.play();
+      audioRef.current.play().catch(err => {
+        console.log("Flower audio prevented:", err);
+      });
     }
     
-    const newPetals = [...Array(8)].map(() => ({
+    // Create different types of flower petals with varied colors
+    const petalColors = ['#FF9933', '#FF5733', '#FFC300', '#FF4040', '#FFCC66'];
+    
+    const newPetals = [...Array(12)].map(() => ({
       left: `${Math.random() * 80 + 10}%`,
       animationDelay: `${Math.random() * 0.5}s`,
       transform: `rotate(${Math.random() * 360}deg) scale(${Math.random() * 0.5 + 0.5})`,
+      backgroundColor: petalColors[Math.floor(Math.random() * petalColors.length)],
     }));
     
     setPetals([...petals, ...newPetals]);
@@ -76,13 +125,28 @@ export const FlowerOffering = () => {
       <audio ref={audioRef} src="/assets/flower-offering.mp3" preload="auto" />
       <button 
         onClick={offerFlowers}
-        className="interaction-button flex items-center justify-center p-3 rounded-full bg-temple-cream border border-temple-gold"
+        className={cn(
+          "interaction-button flex items-center justify-center p-3 sm:p-4", 
+          "rounded-full bg-temple-cream border-2 border-temple-gold",
+          "shadow-[0_0_15px_rgba(230,194,0,0.3)]"
+        )}
         aria-label="Offer flowers"
       >
         <Flower size={24} className="text-temple-saffron" />
       </button>
-      <span className="block text-xs mt-1 text-center font-medium text-temple-red opacity-80">Offer Flowers</span>
       
+      {/* Show blessing after multiple offerings */}
+      {offeringCount > 3 && (
+        <div className="absolute -top-3 -left-2 bg-temple-gold text-white text-[10px] px-2 py-0.5 rounded-full animate-fade-in">
+          Blessed
+        </div>
+      )}
+      
+      <span className="block text-xs mt-2 text-center font-medium text-temple-red opacity-90">
+        Offer Flowers
+      </span>
+      
+      {/* Flower petals animation */}
       {petals.map((style, index) => (
         <Petal key={index} style={style} />
       ))}
@@ -93,7 +157,7 @@ export const FlowerOffering = () => {
 // Prayer Component
 export const PrayerInteraction = ({ onPray }: { onPray: () => void }) => {
   const [isPraying, setIsPraying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [prayerCount, setPrayerCount] = useState(0);
   const timeoutRef = useRef<number | null>(null);
   
   useEffect(() => {
@@ -105,31 +169,52 @@ export const PrayerInteraction = ({ onPray }: { onPray: () => void }) => {
   }, []);
   
   const startPrayer = () => {
-    setIsPraying(true);
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-    }
+    if (isPraying) return;
     
+    setIsPraying(true);
+    setPrayerCount(prev => prev + 1);
     onPray();
     
     timeoutRef.current = window.setTimeout(() => {
       setIsPraying(false);
-    }, 3000);
+    }, 4000);
   };
   
   return (
     <div className="relative">
-      <audio ref={audioRef} src="/assets/prayer-chant.mp3" preload="auto" />
       <button 
         onClick={startPrayer}
-        className={`interaction-button flex items-center justify-center p-3 rounded-full bg-temple-cream border border-temple-gold ${isPraying ? 'bg-temple-gold' : ''}`}
+        className={cn(
+          "interaction-button flex items-center justify-center p-3 sm:p-4",
+          "rounded-full border-2 transition-all duration-500",
+          isPraying 
+            ? "bg-temple-gold border-temple-red shadow-[0_0_20px_rgba(230,194,0,0.5)]" 
+            : "bg-temple-cream border-temple-gold shadow-[0_0_15px_rgba(230,194,0,0.3)]"
+        )}
         disabled={isPraying}
-        aria-label="Pray"
+        aria-label="Pray to Lord Venkateswara"
       >
-        <Hand size={24} className={`${isPraying ? 'text-white' : 'text-temple-red'}`} />
+        <Hand size={24} className={cn(
+          "transition-all duration-300",
+          isPraying ? "text-white" : "text-temple-red"
+        )} />
+        
+        {/* Prayer aura effect */}
+        {isPraying && (
+          <span className="absolute inset-0 rounded-full border border-temple-gold animate-ping opacity-60"></span>
+        )}
       </button>
-      <span className="block text-xs mt-1 text-center font-medium text-temple-red opacity-80">Pray</span>
+      
+      {/* Prayer blessing indicator */}
+      {prayerCount > 2 && (
+        <div className="absolute -top-3 right-0 text-temple-gold text-xs font-semibold drop-shadow-md animate-float-slow">
+          🙏
+        </div>
+      )}
+      
+      <span className="block text-xs mt-2 text-center font-medium text-temple-red opacity-90">
+        Pray
+      </span>
     </div>
   );
 };
@@ -143,63 +228,124 @@ export const DonationButton = () => {
       <div className="relative">
         <button 
           onClick={() => setShowModal(true)}
-          className="interaction-button flex items-center justify-center p-3 rounded-full bg-temple-cream border border-temple-gold"
+          className={cn(
+            "interaction-button flex items-center justify-center p-3 sm:p-4",
+            "rounded-full bg-temple-cream border-2 border-temple-gold",
+            "shadow-[0_0_15px_rgba(230,194,0,0.3)]"
+          )}
           aria-label="Donate"
         >
           <Heart size={24} className="text-temple-red" />
         </button>
-        <span className="block text-xs mt-1 text-center font-medium text-temple-red opacity-80">Donate</span>
+        <span className="block text-xs mt-2 text-center font-medium text-temple-red opacity-90">
+          Donate
+        </span>
       </div>
       
+      {/* Donation Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full animate-scale-in">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in p-4">
+          <div className="bg-white bg-opacity-95 p-5 sm:p-6 rounded-lg max-w-md w-full animate-scale-in border-2 border-temple-gold">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-temple-red">Donate to Tirupati Balaji Temple</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+              <h2 className="text-xl font-semibold text-temple-red flex items-center">
+                <span className="mr-2">🕉️</span>
+                Tirupati Balaji Donation
+              </h2>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 p-1"
+              >
                 <X size={20} />
               </button>
             </div>
             
-            <p className="text-gray-600 mb-4">Your donation directly supports the temple's activities and charitable works.</p>
+            <p className="text-gray-700 mb-4">
+              Your donation directly supports the temple's activities, charity works, and maintenance of this sacred site.
+            </p>
             
             <div className="grid grid-cols-3 gap-3 mb-6">
-              {[101, 501, 1001].map(amount => (
+              {[108, 1008, 11008].map(amount => (
                 <button 
                   key={amount}
-                  className="py-2 px-4 border border-temple-gold text-temple-red hover:bg-temple-cream rounded transition-colors"
+                  className="py-2 px-3 border-2 border-temple-gold text-temple-red hover:bg-temple-cream rounded-md transition-colors font-medium"
                 >
-                  ₹{amount}
+                  ₹{amount.toLocaleString()}
                 </button>
               ))}
             </div>
             
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">Custom Amount (₹)</label>
+            <div className="mb-5">
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Custom Amount (₹)
+              </label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 text-gray-500 bg-gray-100 rounded-l border border-r-0 border-gray-300">
-                  <IndianRupee size={16} />
+                <span className="inline-flex items-center px-3 text-gray-700 bg-gray-100 rounded-l-md border border-r-0 border-gray-300">
+                  ₹
                 </span>
                 <input
                   type="number"
                   min="1"
                   placeholder="Enter amount"
-                  className="flex-grow px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-temple-gold focus:border-transparent"
+                  className="flex-grow px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-temple-gold focus:border-transparent"
                 />
               </div>
             </div>
             
-            <button className="w-full bg-temple-red hover:bg-red-800 text-white py-2 px-4 rounded transition-colors">
-              Proceed to Payment
+            <button className="w-full bg-temple-red hover:bg-red-800 text-white py-3 px-4 rounded-md transition-colors font-medium">
+              Proceed to Secure Payment
             </button>
             
             <div className="mt-4 text-xs text-gray-500 text-center">
               Powered by Tirumala Tirupati Devasthanams Official Payment Gateway
             </div>
+            
+            <div className="flex justify-center mt-3">
+              <div className="bg-gray-100 px-3 py-1 rounded-full flex items-center space-x-2">
+                <span>🔒</span>
+                <span className="text-xs text-gray-600">Secure Transaction</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
     </>
+  );
+};
+
+// Volume Control Component (new!)
+export const VolumeControl = ({ 
+  volume, 
+  setVolume, 
+  isMuted, 
+  toggleMute 
+}: { 
+  volume: number, 
+  setVolume: (vol: number) => void,
+  isMuted: boolean,
+  toggleMute: () => void 
+}) => {
+  return (
+    <div className="absolute top-4 right-4 z-20">
+      <div className="bg-black bg-opacity-20 backdrop-blur-sm px-3 py-2 rounded-full flex items-center space-x-2">
+        <button 
+          onClick={toggleMute}
+          className="text-white opacity-80 hover:opacity-100"
+          aria-label={isMuted ? "Unmute" : "Mute"}
+        >
+          {isMuted ? <VolumeX size={18} /> : <Music size={18} />}
+        </button>
+        
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={(e) => setVolume(parseFloat(e.target.value))}
+          className="temple-volume-slider w-20"
+        />
+      </div>
+    </div>
   );
 };
 
@@ -209,12 +355,18 @@ export const ExitButton = ({ onExit }: { onExit: () => void }) => {
     <div className="relative">
       <button 
         onClick={onExit}
-        className="interaction-button flex items-center justify-center p-3 rounded-full bg-temple-cream border border-temple-gold"
+        className={cn(
+          "interaction-button flex items-center justify-center p-3 sm:p-4",
+          "rounded-full bg-temple-cream border-2 border-temple-gold",
+          "shadow-[0_0_15px_rgba(230,194,0,0.3)]"
+        )}
         aria-label="Exit darshan"
       >
         <X size={24} className="text-temple-red" />
       </button>
-      <span className="block text-xs mt-1 text-center font-medium text-temple-red opacity-80">Exit</span>
+      <span className="block text-xs mt-2 text-center font-medium text-temple-red opacity-90">
+        Exit
+      </span>
     </div>
   );
 };
