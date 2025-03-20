@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Flower, Hand, Heart, X, Music, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,7 +8,12 @@ interface PetalProps {
 }
 
 const Petal = ({ style }: PetalProps) => {
-  return <div className="petal animate-petal-fall" style={style} />;
+  return <div className="petal" style={style} />;
+};
+
+// Flower emoji component
+const FlowerEmoji = ({ emoji, style }: { emoji: string, style: React.CSSProperties }) => {
+  return <div className="flower-emoji animate-float-slow" style={style}>{emoji}</div>;
 };
 
 // Temple Bell Interaction Component
@@ -17,6 +21,19 @@ export const BellInteraction = () => {
   const [isRinging, setIsRinging] = useState(false);
   const [ringCount, setRingCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  useEffect(() => {
+    // Preload bell sound
+    audioRef.current = new Audio('/assets/temple-bell.mp3');
+    audioRef.current.load();
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
   
   const ringBell = () => {
     if (isRinging) return;
@@ -28,7 +45,7 @@ export const BellInteraction = () => {
       audioRef.current.volume = 0.7;
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(err => {
-        console.log("Bell audio prevented:", err);
+        console.error("Bell audio prevented:", err);
       });
     }
     
@@ -44,7 +61,6 @@ export const BellInteraction = () => {
   
   return (
     <div className="relative">
-      <audio ref={audioRef} src="/assets/temple-bell.mp3" preload="auto" />
       <button 
         onClick={ringBell}
         className={cn(
@@ -87,9 +103,22 @@ export const BellInteraction = () => {
 
 // Flower Offering Component
 export const FlowerOffering = () => {
-  const [petals, setPetals] = useState<React.CSSProperties[]>([]);
+  const [flowerEmojis, setFlowerEmojis] = useState<Array<{emoji: string, style: React.CSSProperties}>>([]);
   const [offeringCount, setOfferingCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  useEffect(() => {
+    // Preload flower offering sound
+    audioRef.current = new Audio('/assets/flower-offering.mp3');
+    audioRef.current.load();
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
   
   const offerFlowers = () => {
     setOfferingCount(prev => prev + 1);
@@ -98,31 +127,38 @@ export const FlowerOffering = () => {
       audioRef.current.volume = 0.5;
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(err => {
-        console.log("Flower audio prevented:", err);
+        console.error("Flower audio prevented:", err);
       });
     }
     
-    // Create different types of flower petals with varied colors
-    const petalColors = ['#FF9933', '#FF5733', '#FFC300', '#FF4040', '#FFCC66'];
+    // Create different flower emojis with randomized positions
+    const flowerEmojiOptions = ['🌺', '🌸', '🌹', '🪷', '🌻', '🌼', '💐', '🌷'];
     
-    const newPetals = [...Array(12)].map(() => ({
-      left: `${Math.random() * 80 + 10}%`,
-      animationDelay: `${Math.random() * 0.5}s`,
-      transform: `rotate(${Math.random() * 360}deg) scale(${Math.random() * 0.5 + 0.5})`,
-      backgroundColor: petalColors[Math.floor(Math.random() * petalColors.length)],
+    const newEmojis = [...Array(12)].map(() => ({
+      emoji: flowerEmojiOptions[Math.floor(Math.random() * flowerEmojiOptions.length)],
+      style: {
+        left: `${Math.random() * 80 + 10}%`,
+        top: `${Math.random() * 40 + 30}%`,
+        animationDelay: `${Math.random() * 0.5}s`,
+        transform: `rotate(${Math.random() * 360}deg) scale(${Math.random() * 0.5 + 0.5})`,
+        opacity: 1,
+        fontSize: `${Math.random() * 12 + 16}px`,
+        position: 'absolute',
+        zIndex: 30,
+        pointerEvents: 'none',
+      } as React.CSSProperties,
     }));
     
-    setPetals([...petals, ...newPetals]);
+    setFlowerEmojis([...flowerEmojis, ...newEmojis]);
     
-    // Clean up petals after animation completes
+    // Clean up emojis after animation completes
     setTimeout(() => {
-      setPetals(prevPetals => prevPetals.slice(newPetals.length));
-    }, 3000);
+      setFlowerEmojis(prev => prev.slice(newEmojis.length));
+    }, 5000);
   };
   
   return (
     <div className="relative">
-      <audio ref={audioRef} src="/assets/flower-offering.mp3" preload="auto" />
       <button 
         onClick={offerFlowers}
         className={cn(
@@ -146,9 +182,9 @@ export const FlowerOffering = () => {
         Offer Flowers
       </span>
       
-      {/* Flower petals animation */}
-      {petals.map((style, index) => (
-        <Petal key={index} style={style} />
+      {/* Flower emojis animation */}
+      {flowerEmojis.map((item, index) => (
+        <FlowerEmoji key={index} emoji={item.emoji} style={item.style} />
       ))}
     </div>
   );
@@ -312,7 +348,7 @@ export const DonationButton = () => {
   );
 };
 
-// Volume Control Component (new!)
+// Volume Control Component
 export const VolumeControl = ({ 
   volume, 
   setVolume, 

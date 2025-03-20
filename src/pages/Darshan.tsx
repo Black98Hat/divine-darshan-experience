@@ -8,7 +8,8 @@ import {
   FlowerOffering, 
   PrayerInteraction,
   DonationButton,
-  ExitButton
+  ExitButton,
+  VolumeControl
 } from '../components/DarshanElements';
 import { toast } from '../components/ui/use-toast';
 
@@ -17,48 +18,69 @@ const Darshan = () => {
   const [loading, setLoading] = useState(true);
   const [showControls, setShowControls] = useState(false);
   const [isGlowing, setIsGlowing] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const [isMuted, setIsMuted] = useState(false);
   const govindaAudioRef = useRef<HTMLAudioElement | null>(null);
   const templeAmbienceRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Control audio volume
+  const setGlobalVolume = (vol: number) => {
+    setVolume(vol);
+    if (templeAmbienceRef.current) {
+      templeAmbienceRef.current.volume = vol;
+    }
+  };
+  
+  // Toggle mute
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (templeAmbienceRef.current) {
+      templeAmbienceRef.current.muted = !isMuted;
+    }
+  };
   
   useEffect(() => {
     // Preload all audio and images
     const preloadAssets = async () => {
       try {
-        // Load sounds
-        const soundPromises = [
-          '/assets/temple-ambience.mp3',
-          '/assets/govinda-chant.mp3',
-          '/assets/temple-bell.mp3',
-          '/assets/flower-offering.mp3',
-          '/assets/prayer-chant.mp3'
-        ].map(src => {
-          return new Promise((resolve, reject) => {
-            const audio = new Audio();
-            audio.src = src;
-            audio.addEventListener('canplaythrough', resolve);
-            audio.addEventListener('error', reject);
-            audio.load();
+        // Create and preload audio elements
+        templeAmbienceRef.current = new Audio('/assets/temple-ambience.mp3');
+        templeAmbienceRef.current.loop = true;
+        templeAmbienceRef.current.volume = volume;
+        templeAmbienceRef.current.load();
+        
+        govindaAudioRef.current = new Audio('/assets/govinda-chant.mp3');
+        govindaAudioRef.current.volume = 0.4;
+        govindaAudioRef.current.load();
+        
+        // Start playing temple ambience
+        if (templeAmbienceRef.current) {
+          templeAmbienceRef.current.play().catch(err => {
+            console.error("Temple ambience audio prevented:", err);
           });
-        });
-
-        // Load images
-        const imagePromises = [
+        }
+        
+        // Load images with explicit src setting to ensure they load
+        const imageUrls = [
           '/assets/temple-interior.jpg',
           '/assets/venkateswara-murti.png',
           '/assets/diya-animated.gif',
           '/assets/aarti-flame.png',
           '/assets/temple-archway.png'
-        ].map(src => {
-          return new Promise((resolve, reject) => {
+        ];
+        
+        // Force image preloading
+        await Promise.all(imageUrls.map(url => {
+          return new Promise((resolve) => {
             const img = new Image();
-            img.src = src;
-            img.onload = resolve;
-            img.onerror = reject;
+            img.onload = () => resolve(true);
+            img.onerror = () => {
+              console.error(`Failed to load image: ${url}`);
+              resolve(false);
+            };
+            img.src = url;
           });
-        });
-
-        // Wait for assets to load
-        await Promise.allSettled([...soundPromises, ...imagePromises]);
+        }));
         
         // Simulate temple entrance transition with a slightly longer delay for immersion
         setTimeout(() => {
@@ -93,19 +115,21 @@ const Darshan = () => {
       // Stop any playing audio
       if (templeAmbienceRef.current) {
         templeAmbienceRef.current.pause();
+        templeAmbienceRef.current = null;
       }
       if (govindaAudioRef.current) {
         govindaAudioRef.current.pause();
+        govindaAudioRef.current = null;
       }
     };
-  }, []);
+  }, [volume]);
 
   const playGovinda = () => {
     if (govindaAudioRef.current) {
       govindaAudioRef.current.volume = 0.4;
       govindaAudioRef.current.currentTime = 0;
       govindaAudioRef.current.play().catch(err => {
-        console.log("Audio play prevented:", err);
+        console.error("Govinda audio prevented:", err);
       });
     }
   };
@@ -117,7 +141,7 @@ const Darshan = () => {
     const prayerAudio = new Audio('/assets/prayer-chant.mp3');
     prayerAudio.volume = 0.6;
     prayerAudio.play().catch(err => {
-      console.log("Prayer audio prevented:", err);
+      console.error("Prayer audio prevented:", err);
     });
     
     setTimeout(() => setIsGlowing(false), 4000);
@@ -166,14 +190,13 @@ const Darshan = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col relative overflow-hidden bg-gradient-to-b from-[#120c02] to-[#1b0e01]">
-      {/* Sacred audio elements */}
-      <audio 
-        ref={templeAmbienceRef}
-        src="/assets/temple-ambience.mp3" 
-        autoPlay 
-        loop 
+      {/* Volume controls */}
+      <VolumeControl
+        volume={volume}
+        setVolume={setGlobalVolume}
+        isMuted={isMuted}
+        toggleMute={toggleMute}
       />
-      <audio ref={govindaAudioRef} src="/assets/govinda-chant.mp3" preload="auto" />
       
       {/* Temple ambient background */}
       <TempleBackground />
