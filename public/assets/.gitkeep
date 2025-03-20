@@ -1,0 +1,20 @@
+
+# Audio and Image Assets
+
+The following files are needed for the app to function:
+- tirupati-entrance-blur.jpg (temple entrance blurred)
+- temple-interior.jpg (temple interior)
+- balaji-murti.png (Lord Venkateswara murti with transparency)
+- diya.png (a flickering diya/oil lamp image with transparency)
+- aarti-flame.png (a flame image with transparency)
+
+Audio files needed:
+- ambient-temple-entrance.mp3 (temple entrance sounds, bells in distance)
+- temple-ambience.mp3 (main temple ambient sounds)
+- temple-bell.mp3 (single bell ring sound)
+- flower-offering.mp3 (subtle sound for flower offering)
+- govinda-chant.mp3 (soft "Govinda Govinda" chant)
+- prayer-chant.mp3 (short prayer sound)
+
+These files should be placed in this folder for the app to function properly.
+Users will need to upload these files to the project or replace with appropriate alternatives.
